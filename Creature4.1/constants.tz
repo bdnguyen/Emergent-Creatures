@@ -3,7 +3,7 @@
 @define LIGHT_POS (0, 50, 0).
 @define FLOOR_SIZE (350, 5, 350).
 @define FLOOR_DEPTH (0, -3.5, 0).
-@define NUM_SCHEDUL_GENERE 5.
+@define NUM_SCHEDUL_GENERE 10.
 @define INTERVAL_SCHEDUL_GENERE 15. 
 
 # Positions des abris
@@ -12,13 +12,13 @@
 @define ABRI3_POS (-90, 0, -90).
 
 # Nombre des creatures
-@define NUM_PREDS 10.
-@define NUM_PROIES 100.
-@define NUM_FOODS 200.
+@define NUM_PREDS 6.
+@define NUM_PROIES 120.
+@define NUM_FOODS 250.
 
 # Energie des creatures
 @define PROIE_ENERGIE 10.
-@define PRED_ENERGIE 12.
+@define PRED_ENERGIE 14.
 @define FOOD_ENERGIE 1.
 
 # Portee des creatures + divers
@@ -26,7 +26,7 @@
 @define FOOD_RANGE (100, 0, 100).
 @define NBH_SIZE_PROIE 15.0.
 @define NBH_SIZE_PRED 20.0.
-@define PRED_START_POS (-80, 0, 80).
+@define PRED_START_POS(-80, 0, 80).
 
 
 

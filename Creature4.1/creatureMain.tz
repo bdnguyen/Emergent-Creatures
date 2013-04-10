@@ -17,8 +17,8 @@ Control : Creatures {
 		foods (list).
 		proies (list).
 		preds (list).
-		item (object).
-		items (list).
+		#item (object).
+		#items (list).
 		cloudTexture (object).
 		#selection (object).
 		
@@ -76,7 +76,9 @@ Control : Creatures {
 		#self enable-reflections.
 		#self disable-text.
 		#self enable-outline.
-		
+		self disable-freed-instance-protection.
+		 
+		 
 		
 		# Generer (foods pour l'instant) avec nombre de fois et intervalle de temps
 		+ to schedule-generer with fois (int) and interval (int) :
@@ -95,13 +97,12 @@ Control : Creatures {
 		
 		+ to refresh-neighbors:
 			self update-neighbors.
+			#self disable-freed-instance-protection.
 			
 		+ to end-and-archive:
 			self save-as-xml file "archiveCreature.xml".
 			self end-simulation. 	
 			
-
-	
 	+ to iterate:
 		#item (object).
 		
@@ -177,7 +178,7 @@ Creature : Proie {
 					push item onto neighbors-pred.
 					line = new Line.
 					line connect from self to item with-color (0, 0, 1).
-					if (|(item get-location) - (self get-location)| > 5): {
+					if (|(item get-location) - (self get-location)| > 7): {
 						free line.
 					}
 					self drift to (self choix-abris).
@@ -218,7 +219,10 @@ Creature: Predateur {
 				self set-color to (1, 0, 0).
 								
 				#self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE. #pour qu'il ne "spawn" pas dans l'abri
+				if (random[1]==0):{
 				self move to PRED_START_POS.
+				} else self move to -PRED_START_POS.
+				
 				self set-energie to PRED_ENERGIE.
 
 				self handle-collisions with-type "Proie" with-method "tuer".
@@ -227,7 +231,7 @@ Creature: Predateur {
 				
 		
 		+ to battre with predateurs (object):
-				if (energie > (predateurs get-energie)*1.75):{
+				if (energie > (predateurs get-energie)*2):{
 				self set-energie to (energie += (predateurs get-energie)/6).
 				free predateurs.
 				print "Predateur: J'ai tue un concurrent, vive la selection naturelle! Energie =",(self get-energie).
@@ -250,7 +254,7 @@ Creature: Predateur {
 				self actionWander.
 				#pred ne peut pas rester trop pret de l'abri des proies
 				if (|(self get-location) - ABRI1_POS| < 50): { 
-					self drift to ((self get-location)*1.2).
+					self drift to ((self get-location)*1.4).
 				} else {				
 				
 				# instincts pred

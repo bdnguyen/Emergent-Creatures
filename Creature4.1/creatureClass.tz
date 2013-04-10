@@ -29,7 +29,8 @@ Mobile: Creature {
 	
 	+ to se-balader:
 		if random[100] == 0: { 
-			self wander to random[2 * CREATURE_RANGE].	
+			self wander to random[2*CREATURE_RANGE] - CREATURE_RANGE. 
+			#- CREATURE_RANGE.	
 		}		
 	
 	+ to checkMortDeFaim with e(float):
