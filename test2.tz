@@ -1,0 +1,380 @@
+#***************************************Creature 3.1***************************************
+# Changement de la classe Proie: Proie est mnt de type Mobile. Changements sur les movements 
+# et actions du Proie.
+# -Proie maintenant peut detecter and chercher les foods a proximite, retourner
+# vers l'abri (ajout d'un abri pour les proies) lors qu'il detecte un predateur.
+# -Pred mnt chasse les proies mais ne peut pas rapprocher trop de leur abri
+# -Ajout d'un fonction pour auto-genere les foods en fonction du temps
+# 
+@path "classes"
+@path "lib/classes"
+
+@use Mobile.
+@use Control.
+@use Stationary.
+@use Wanderer.
+@use Shape.
+@use Line.
+
+@define NUM_PREDS 15.
+@define NUM_PROIES 40.
+@define NUM_FOODS 100.
+@define CREATURE_RANGE (75, 0, 75).
+@define FOOD_RANGE (100, 0, 90).
+@define FOOD_ENERGIE 1.
+@define PROIE_ENERGIE 10.
+@define PRED_ENERGIE 12.
+@define ABRI_POS (0, 0, 0).
+
+Controller Creature.
+
+Control : Creature {
+	+ variables:
+		foods (list).
+		proies (list).
+		preds (list).
+		item (object).
+		cloudTexture (object).
+		selection (object).
+		
+
+	+ to click on item (object):
+		if selection: selection hide-neighbor-lines.
+		if item: item show-neighbor-lines.
+		selection = item.
+		super click on item.
+
+	+ to init:
+		floor (object).
+		abri (object).
+		
+		self add-menu named "Generer foods" for-method "generer-foods".		
+		self add-menu named "Refresh neighbors" for-method "refresh-neighbors".
+		# set up the lighting
+		self enable-lighting.
+		self move-light to (0, 50, 0).
+
+
+		# Set up the background.
+		cloudTexture = (new Image load from "images/clouds.png").
+		self set-background-texture-image to cloudTexture.
+
+		# Add a huge floor.
+
+		floor = new Floor.
+		floor set-size to (250, 5, 250).
+        floor move to (0, -3.5, 0). 
+		floor catch-shadows.
+		
+		# Create Abri.
+		abri = new Abri.
+		abri move to ABRI_POS.
+		
+		# Create les agents.
+		proies = NUM_PROIES new Proie.
+		preds = NUM_PREDS new Predateur.
+		foods = NUM_FOODS new Food.	
+		self schedule-generer with 5 and 15.
+
+		# Set some camera/display options.
+		self offset-camera by (180, 80, 80).
+		self enable-shadows.
+		#self enable-reflections.
+		#self disable-text.
+		#self enable-outline.
+		
+		
+		# Generer (foods pour l'instant) avec nombre de fois et intervalle de temps
+		+ to schedule-generer with fois (int) and interval (int) :
+			i (int).
+			t (int).
+			t = interval.
+			for i=0, i<fois, i++:{ 
+				if ((controller get-time)<75):{
+					self schedule method-call "generer-foods" at-time t.
+					t+=interval.
+				}
+			}
+			
+		+ to generer-foods:
+			foods = NUM_FOODS new Food.
+		
+		+ to refresh-neighbors:
+			self update-neighbors.
+			
+		+ to end-and-archive:
+			self save-as-xml file "archiveCreature.xml".
+			self end-simulation. 	
+
+	+ to iterate:
+		item (object).
+		
+		self update-neighbors.
+	
+		#foreach item in proies: {
+		#	item instinct-proie.
+		#}
+
+
+		super iterate.
+
+}
+
+Mobile : Proie {
+	+ variables:
+		drifting (int).
+		driftLocation (vector).
+		wandering (int).
+		wanderLocation (vector).
+		shape (object).
+		proieEnergie (float).
+		neighbors-food (list).
+		neighbors-pred (list).
+		
+	+ to init:
+		shape =(new PolygonCone init-with sides 6 height 3 radius 3).
+		self set-shape to shape.
+		
+		self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE.
+		self set-velocity to (0, 0, 0).
+		self set-color to (0, 1, 0).
+		self set-energie to PROIE_ENERGIE.
+		self handle-collisions with-type "Food" with-method "manger".
+		self set-neighborhood-size to 15.0.
+	
+	+ to set-energie to PE (float):
+			proieEnergie = PE.
+		
+	+ to get-energie:
+			return proieEnergie.	
+	
+	+ to find-closest-food in neighbors (list):
+			item (object).
+			closestFood (object).
+			distance (float).			
+			closestDistance(int).
+			
+			closestDistance = 10000.
+
+			foreach item in neighbors: {
+					distance = |(self get-location) - (item get-location)|.
+
+					if distance < closestDistance: {
+							closestFood = item.
+							closestDistance = distance.
+					}
+			}
+			#print "Proie: Closest food! $closestFood".
+			return closestFood.
+			
+	
+	+ to se-balader:
+		if random[100] == 0: { 
+			self wander to random[2 * CREATURE_RANGE] - CREATURE_RANGE.	
+		}
+	
+	+ to manger with food (object):				
+			proieEnergie += (food get-energie).
+			self set-color to (0,0,1).
+			free food.
+			#print "Proie: J'ai mange un truc, ouais! Energie =", (self get-energie).
+	
+	+ to instinct-proie:
+			neighbors (list).
+			item (object).
+			line (object).
+		
+			neighbors = (self get-neighbors).
+		
+			foreach item in neighbors:
+				if (item is a "Food"): {
+					#print "Proie: J'ai detecte un food: $item".
+					push item onto neighbors-food.
+					#self drift to ((self find-closest-food in neighbors-food) get-location).
+					line = new Line.
+					line connect from self to item with-color (0, 0, 1).
+					#self add-line to item with-color (0.1, 0.1, 1).
+					if (|(item get-location) - (self get-location)| > 4): {
+						free line.
+					}				
+					self drift to (item get-location).					
+				} else
+				if (item is a "Predateur"): {
+					#print "Proie: J'ai detecte un predateur: $item".
+					push item onto neighbors-pred.
+					line = new Line.
+					line connect from self to item with-color (1, 0, 0.5).
+					if (|(item get-location) - (self get-location)| > 6): {
+						free line.
+					}
+					self drift to ABRI_POS.
+				} else {
+					self se-balader.
+				}
+			
+			if drifting: {
+				self offset by .06 *(driftLocation - (self get-location)).
+				if (|driftLocation - (self get-location)| < .01): {
+					self move to driftLocation.
+					drifting = 0.   
+				}
+			}
+		
+			if wandering: {
+				self offset by .005 *(wanderLocation - (self get-location)).
+				if (|wanderLocation - (self get-location)| < .01): {
+					self move to wanderLocation.
+					wandering = 0.   
+				}
+			}		
+
+	+ to drift to location (vector):
+		drifting = 1.
+		driftLocation = location.  
+	
+	+ to wander to location (vector):	
+		wandering = 1.
+		wanderLocation = location.	
+
+	
+	+ to iterate:
+		self instinct-proie.
+		#juste pour tester visuellement:
+		if (proieEnergie > 19):{
+			self set-shape to (new PolygonCone init-with sides 3 height 4 radius 5).
+		}
+		if (proieEnergie > 25):{
+			self set-shape to (new PolygonCone init-with sides 3 height 6 radius 7).
+		}
+		
+
+}
+
+Wanderer: Predateur {
+        + variables:
+                predShape (object).
+				predEnergie (float).
+				neighbors-proie (list).
+				drifting (int).
+				driftLocation (vector).
+
+        + to init:
+				
+				predShape =(new PolygonCone init-with sides 6 height 3 radius 3).
+				
+                self set-shape to predShape.
+				
+				self set-color to (1, 0, 0).
+				
+				self set-wander-range to CREATURE_RANGE.
+				self randomize-location.
+				self set-energie to PRED_ENERGIE.
+
+				self handle-collisions with-type "Proie" with-method "tuer".
+				self handle-collisions with-type "Predateur" with-method "battre".
+				self set-neighborhood-size to 20.0.
+				
+		+ to set-energie to PE (float):
+				predEnergie = PE.
+
+		+ to get-energie:
+				return predEnergie.
+		
+		+ to battre with predateurs (object):
+				if (predEnergie > (predateurs get-energie)*1.75):{
+				predEnergie += (predateurs get-energie)/6.
+				free predateurs.
+				print "Predateur: J'ai tue un concurrent, vive la selection naturelle! Energie =",(self get-energie).
+				}
+				
+		+ to tuer with proies (object):
+				if (predEnergie > (proies get-energie)):{
+				predEnergie += (proies get-energie)/3.
+				free proies.
+				print "Predateur: J'ai tue mon proie, omnomnom. Energie =", (self get-energie).
+				}
+				
+		+ to instinct-pred:
+				neighbors (list).
+				item (object).
+				line (object).
+		
+				neighbors = (self get-neighbors).
+				
+				#pred ne peut pas reste trop pret de l'abri des proies
+				if (|(self get-location)| < |ABRI_POS + (80,0,80)|): { 
+					self drift to -((self get-location)/2).
+				} else {				
+				
+				# instincts pred
+				foreach item in neighbors:
+					if (item is a "Proie"): {
+					#print "Predateur: J'ai detecte un proie: $item".
+					push item onto neighbors-proie.
+						line = new Line.
+						line connect from self to item with-color (1, 0, 0).
+						if (|(item get-location) - (self get-location)| > 4): {
+							free line.
+						}				
+						self drift to (item get-location).									
+				}		
+		
+				if drifting: {
+					self offset by .06 *(driftLocation - (self get-location)).
+					if (|driftLocation - (self get-location)| < .01): {
+						self move to driftLocation.
+						drifting = 0.   
+					}
+				}
+		}
+				
+		+ to drift to location (vector):
+			drifting = 1.
+			driftLocation = location.  			
+		
+        + to iterate:
+				self set-top-velocity to 5.
+				self instinct-pred.
+				
+				#Pour tester visuellement
+				if (predEnergie > 19):{
+				self set-shape to (new PolygonCone init-with sides 6 height 4 radius 5).
+				}
+				if (predEnergie > 25):{
+				self set-shape to (new PolygonCone init-with sides 6 height 6 radius 7).
+				}
+				if (predEnergie > 30):{
+				self set-shape to (new PolygonCone init-with sides 6 height 8 radius 9).
+				}
+
+				super iterate.		
+}
+
+
+Stationary : Food {
+		+ variables:
+                foodShape (object).
+				foodEnergie (float).
+		+ to init: 
+				foodShape = (new Sphere init-with radius 1).
+				self set-shape to foodShape.
+				self set-energie to FOOD_ENERGIE.
+				self set-color to (255, 255, 255).				
+				self randomize-location.
+		
+		+ to set-energie to FE (float):
+				foodEnergie = FE.
+				
+		+ to get-energie:
+				return foodEnergie.
+				
+		+ to randomize-location:
+				self move to random[2 * FOOD_RANGE] - FOOD_RANGE.		
+}
+
+Stationary : Abri {
+	+ to init:
+		self set-shape to (new Sphere init-with radius 20).		
+		self set-color to (0,0,250).
+		self set-transparency to .3.
+}

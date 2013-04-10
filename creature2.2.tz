@@ -1,0 +1,199 @@
+#************************************ Creature 2.2 ***************************************
+#**** Version ameliore qui tourne. - Duong 
+
+
+#**** Nouveautes dans cette version:
+#	- Separation predateur/proie.
+#	- Ajout de caracteristique pour les creatures: energie pour tous les creatures.
+#	- Plus de regles: +Proie gagne d'energie lorsqu'il mange des nourritures.
+#					  +Pred gagne d'energie lorsqu'il tue des proies (mais aussi des autres preds, voir en bas).		
+#	   			  	  +Si energie du proie > energie du pred, pred ne peut pas la tuer.	
+#					  +Les preds peuvent se battre, en fonction de l'energie, l'un peut 
+#tuer l'autre, la formule pour determiner le gagnant est dans le code.  
+#	- Code un peu plus structure (ajout des getters setters etc.)
+#
+
+#**** A faire pour la version suivante:
+#	- Ranger le code, corriger les fautes d'orthographe, le faire plus lisible.
+#	- Faire un algo plus intelligent pour les creatures (pour qu'il cherche la nourriture plus rapidment).		
+#   - Chercher a ameliorer la taille des creatures visuellement en fonction de leur energie.
+#   - Commence a chercher sur l'heritage (plusieurs cycle des creatures qui s'ameiore a chaque fois).
+@path "classes"
+@path "lib/classes"
+
+@use Mobile.
+@use Control.
+@use Stationary.
+@use Wanderer.
+
+
+@define NUM_PRED 20.
+@define NUM_PROIE 40.
+@define NUM_FOODS 100.
+@define CREATURE_RANGE (85, 0, 85).
+@define FOOD_RANGE (75, 0, 75).
+@define FOOD_ENERGIE 1.
+@define PROIE_ENERGIE 10.
+@define PRED_ENERGIE 12.
+
+Controller creature.
+
+Control : creature {
+	+ variables:
+		proies (list).
+		predateurs (list).
+		foods (list).
+		backgroundTexture (object).
+		
+	+ to init:
+		floor (object).
+		
+		self add-menu named "Remettre les predateurs a l'origine" for-method "reset-predateurs".
+		self add-menu named "Generer foods" for-method "generer-foods".
+		
+		#self enable-lighting. 
+        #self move-light to (0, 50, 0).
+		
+		backgroundTexture = (new Image load from "images/clouds.png").
+		# Ajouter un floor.
+		
+		floor = new Floor.
+		floor set-size to (250, 5, 250).
+        floor move to (0, -3.5, 0). 
+		floor catch-shadows.
+		
+		
+		predateurs = NUM_PRED new Predateur.
+		proies = NUM_PROIE new Proie.
+		foods = NUM_FOODS new Foods.		
+		#foods set-color to (0.0, 0.0, 0.0).	
+		
+		self set-background-texture-image to backgroundTexture.
+		self offset-camera by (50, 50, 60).
+		self enable-shadows.
+		
+		+ to randomize-food:
+			foods randomize-location.
+		
+		+ to reset-predateurs:
+			predateurs move to (0, 0, 0).
+		
+		+ to generer-foods:
+			foods = NUM_FOODS new Foods.
+			
+		
+		print "simulation started".
+		
+	+ to iterate:
+
+		super iterate.
+}
+
+
+Wanderer : Proie {
+        + variables:
+                proieShape (object).
+				proieEnergie (float).
+				
+        + to init:
+				
+				proieShape =(new PolygonCone init-with sides 3 height 2 radius 3).
+
+                self set-shape to proieShape.
+				
+				self set-color to (0, 1, 0).
+				
+				self set-wander-range to CREATURE_RANGE.
+				self randomize-location.
+				self set-proie-energie to PROIE_ENERGIE.
+				self handle-collisions with-type "Foods" with-method "manger".
+
+		+ to set-proie-energie to PE (float):
+				proieEnergie = PE.
+		
+		+ to get-proie-energie:
+				return proieEnergie.
+		
+		#+ to augmente-proie-energie:
+						
+		
+		+ to manger with foods (object):				
+				proieEnergie += (foods get-foods-energie).
+				self set-color to (0,0,1).
+				free foods.
+				print "Proie: J'ai bouffe un truc, ouais!".
+				
+        + to iterate:
+				self set-top-velocity to 3.5.
+				
+				super iterate.		
+}
+Wanderer: Predateur {
+        + variables:
+                predShape (object).
+				predEnergie (float).
+        + to init:
+				
+				predShape =(new PolygonCone init-with sides 5 height 3 radius 3).
+
+                self set-shape to predShape.
+				
+				self set-color to (1, 0, 0).
+				
+				self set-wander-range to CREATURE_RANGE.
+				self randomize-location.
+				self set-pred-energie to PRED_ENERGIE.
+				self handle-collisions with-type "Foods" with-method "manger".
+				self handle-collisions with-type "Proie" with-method "tuer".
+				self handle-collisions with-type "Predateur" with-method "battre".
+
+		+ to set-pred-energie to PE (float):
+				predEnergie = PE.
+
+		+ to get-pred-energie:
+				return predEnergie.
+		
+		#+ to augmente-energie:
+		
+		+ to battre with predateurs (object):
+				if (predEnergie > (predateurs get-pred-energie)+5):{
+				predEnergie += (predateurs get-pred-energie)/3.
+				free predateurs.
+				print "Pred: J'ai tue un concurrent, vive la selection naturelle!".
+				}
+		#+ to manger with foods (object):
+				#free foods.	
+				#print "j'ai bouffe un truc, ouais!".
+		+ to tuer with proies (object):
+				if (predEnergie > (proies get-proie-energie)):{
+				predEnergie += (proies get-proie-energie)/2.
+				free proies.
+				print "Pred: J'ai tue mon proie, omnomnom".
+				}
+        + to iterate:
+				self set-top-velocity to 3.5.
+				
+				super iterate.
+}
+
+Stationary : Foods {
+		+ variables:
+                foodsShape (object).
+				foodsEnergie (float).
+		+ to init: 
+				#foodsShape = (new Cube init-with size (1, 1, 1)).
+				foodsShape = (new Sphere init-with radius 1).
+				self set-shape to foodsShape.
+				self set-foods-energie to FOOD_ENERGIE.
+				self set-color to (255.0, 255.0, 255.0).				
+				self randomize-location.
+		
+		+ to set-foods-energie to FE (float):
+				foodsEnergie = FE.
+				
+		+ to get-foods-energie:
+				return foodsEnergie.
+				
+		+ to randomize-location:
+				self move to random[2 * FOOD_RANGE] - FOOD_RANGE.		
+}

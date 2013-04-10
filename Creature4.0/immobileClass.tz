@@ -1,0 +1,38 @@
+@path "classes"
+@path "lib/classes"
+@path "demos/ProjetEmergence/Creature4.0"
+
+@use Stationary.
+@use Control.
+
+@define FOOD_ENERGIE 1.
+@define FOOD_RANGE (150, 0, 150).
+
+
+Stationary : Food {
+		+ variables:
+                foodShape (object).
+				foodEnergie (float).
+		+ to init: 
+				foodShape = (new Sphere init-with radius 1).
+				self set-shape to foodShape.
+				self set-energie to FOOD_ENERGIE.
+				self set-color to (255, 255, 255).				
+				self randomize-location.
+		
+		+ to set-energie to FE (float):
+				foodEnergie = FE.
+				
+		+ to get-energie:
+				return foodEnergie.
+				
+		+ to randomize-location:
+				self move to random[2 * FOOD_RANGE] - FOOD_RANGE.		
+}
+
+Stationary : Abri {
+	+ to init:
+		self set-shape to (new Sphere init-with radius 20).		
+		self set-color to (0,0,250).
+		self set-transparency to .3.
+}

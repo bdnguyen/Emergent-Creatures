@@ -1,0 +1,116 @@
+# include some frequently used classes and specify common classpaths
+@path "classes"
+@path "lib/classes"
+
+@use Mobile.
+@use Control.
+@use Stationary.
+@use Wanderer.
+
+@define NUM_AGENTS 50.
+@define NUM_FOODS 100.
+@define FOOD_RANGE (75, 0, 75).
+
+Controller agentsFoods.
+
+Control : agentsFoods {
+	+ variables:
+		agents (list).
+		foods (list).
+		backgroundTexture (object).
+		
+	+ to init:
+		floor (object).
+		
+		self add-menu named "Reset agents" for-method "reset-agents".
+		
+		self enable-lighting. 
+        self move-light to (0, 50, 0).
+		
+		backgroundTexture = (new Image load from "images/clouds.png").
+		# Add a floor.
+		floor = new Floor.
+		floor set-size to (250, 5, 250).
+        floor move to (0, -3.5, 0). 
+		floor catch-shadows.
+		
+		agents = NUM_AGENTS new Agents.
+		#agents set-color to (1.0, 0.0, 0.0).
+		foods = NUM_FOODS new Foods.
+		#foods set-color to (0.0, 0.0, 0.0).	
+		
+		self set-background-texture-image to backgroundTexture.
+		self offset-camera by (50, 50, 60).
+		self enable-shadows.
+		
+		+ to randomize-food:
+			foods randomize-location.
+		
+		+ to reset-agents:
+			agents move to (0, 0, 0).
+		
+		
+		print "simulation started".
+		
+	+ to iterate:
+
+		super iterate.
+}
+
+
+Mobile : Agents {
+        + variables:
+                agentsShape (object).
+
+        + to init:
+                # make a new shape -- this step is optional.  The 
+                # default shape for a new Mobile is a sphere of 
+                # radius 1.
+
+				agentsShape =(new PolygonCone init-with sides 3 height 2 radius 3).
+				
+				# set the Mobile to the new shape and we're done!
+
+                self set-shape to agentsShape.
+				
+				# set the color to red = 0, green = 1, blue = 0.
+				self set-color to (0.0, 1.0, 0.0).
+				# move the agent to the location (10, 0, 0) in 3D space...
+				self move to random[(50, 0, 50)] - (3, 0, 5).
+				
+				# set the agent's acceleration to (0, -9.8, 0) 
+					
+				
+				
+				
+        + to iterate:
+                # set the agent's velocity to (0, 0, 10) 
+				self set-velocity to random[(20, 0, 20)] - (5, 0, 5).
+				
+}
+
+Stationary : Foods {
+		+ variables:
+                foodsShape (object).
+		+ to init: 
+				#foodsShape = (new Cube init-with size (1, 1, 1)).
+				foodsShape = (new Sphere init-with radius 1).
+				self set-shape to foodsShape.
+				self set-color to (255.0, 255.0, 255.0).
+				self randomize-location.
+		+ to randomize-location:
+				self move to random[2 * FOOD_RANGE] - FOOD_RANGE.		
+}
+#Stationary : Wall {
+
+		# location: position in world to place center of wall
+		# sizeVector: vector defining dimensions of wall
+		# theColor: color of wall as a vector with components between 0 and 1 inclusive
+	#+ to create at location (vector) size sizeVector (vector) color theColor (vector):
+		#wallShape (object).
+
+		#wallShape = (new Cube init-with size sizeVector).
+
+		#self register with-shape wallShape at-location location.
+		#self set-color to theColor.
+#}

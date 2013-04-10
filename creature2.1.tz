@@ -1,0 +1,120 @@
+#Creature 2.1:
+#Premiere version simple qui tourne. A developper :) - Duong
+
+#- Quelque controle simple d'environnement (camera, lumiere, l'ombre etc.)
+#- Generation des objets (nourritures et creatures) de facon aleatoire sur le terrain.
+#- Gestion simple d'evenements (collision nourriture/creature).
+
+
+#  Quelques idees pour la version prochaine:
+#- Separation predateur/proie.
+#- Plus caracteristique (energie lors que le creature mange, taille evolue en fonction d'energie..)
+#- Plus de regles.
+#- Plus de commentaire.  
+
+@path "classes"
+@path "lib/classes"
+
+@use Mobile.
+@use Control.
+@use Stationary.
+@use Wanderer.
+
+
+@define NUM_AGENTS 100.
+@define NUM_FOODS 100.
+@define AGENTS_RANGE (85, 0, 85).
+@define FOOD_RANGE (75, 0, 75).
+
+Controller creature.
+
+Control : creature {
+	+ variables:
+		agents (list).
+		foods (list).
+		backgroundTexture (object).
+		
+	+ to init:
+		floor (object).
+		
+		self add-menu named "Remet a l'origine les agents" for-method "reset-agents".
+		self add-menu named "Generer foods" for-method "generer-foods".
+		
+		self enable-lighting. 
+        self move-light to (0, 50, 0).
+		
+		backgroundTexture = (new Image load from "images/clouds.png").
+		# Add a floor.
+		
+		floor = new Floor.
+		floor set-size to (250, 5, 250).
+        floor move to (0, -3.5, 0). 
+		floor catch-shadows.
+		
+		
+		agents = NUM_AGENTS new Agents.
+		#agents set-color to (1.0, 0.0, 0.0).
+		foods = NUM_FOODS new Foods.
+		#foods set-color to (0.0, 0.0, 0.0).	
+		
+		self set-background-texture-image to backgroundTexture.
+		self offset-camera by (50, 50, 60).
+		self enable-shadows.
+		
+		+ to randomize-food:
+			foods randomize-location.
+		
+		+ to reset-agents:
+			agents move to (0, 0, 0).
+		
+		+ to generer-foods:
+			foods = NUM_FOODS new Foods.
+			
+		
+		print "simulation started".
+		
+	+ to iterate:
+
+		super iterate.
+}
+
+
+Wanderer : Agents {
+        + variables:
+                agentsShape (object).
+
+        + to init:
+	
+				agentsShape =(new PolygonCone init-with sides 3 height 2 radius 3).
+
+                self set-shape to agentsShape.
+				
+				self set-color to (0, 1, 0).
+				
+				self set-wander-range to AGENTS_RANGE.
+				self randomize-location.
+				self handle-collisions with-type "Foods" with-method "manger".
+		
+		+ to manger with foods (object):
+				free foods.	
+				self set-color to (1,0,0).	
+				print "j'ai bouffe un truc, ouais!".
+				
+        + to iterate:
+				self set-top-velocity to 3.5.
+				
+				super iterate.		
+}
+
+Stationary : Foods {
+		+ variables:
+                foodsShape (object).
+		+ to init: 
+				#foodsShape = (new Cube init-with size (1, 1, 1)).
+				foodsShape = (new Sphere init-with radius 1).
+				self set-shape to foodsShape.
+				self set-color to (255.0, 255.0, 255.0).
+				self randomize-location.
+		+ to randomize-location:
+				self move to random[2 * FOOD_RANGE] - FOOD_RANGE.		
+}

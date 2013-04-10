@@ -1,0 +1,74 @@
+@path "classes"
+@path "lib/classes"
+@path "demos/ProjetEmergence/Creature4.0"
+
+@use Mobile.
+@use Control.
+
+@define CREATURE_RANGE (120, 0, 120).
+
+Mobile: Creature {
+	+ variables:
+		drifting (int).
+		driftLocation (vector).
+		wandering (int).
+		wanderLocation (vector).
+		energie (float).
+
+	+ to set-energie to e (float):
+			energie = e.
+		
+	+ to get-energie:
+			return energie.		
+	
+	+ to se-balader:
+		if random[100] == 0: { 
+			self wander to random[2 * CREATURE_RANGE] - CREATURE_RANGE.	
+		}		
+		
+	+ to drift to location (vector):
+		drifting = 1.
+		driftLocation = location.  
+	
+	+ to wander to location (vector):	
+		wandering = 1.
+		wanderLocation = location.	
+	
+	+ to actionDrift:
+			if drifting: {
+				self offset by .06 *(driftLocation - (self get-location)).
+				if (|driftLocation - (self get-location)| < .01): {
+					self move to driftLocation.
+					drifting = 0.   
+				}		
+			}
+
+	+ to actionWander:
+			if wandering: {
+				self offset by .005 *(wanderLocation - (self get-location)).
+				if (|wanderLocation - (self get-location)| < .01): {
+					self move to wanderLocation.
+					wandering = 0.   
+				}
+			}			
+			
+	+ to find-closest-food in neighbors (list):
+			item (object).
+			closestFood (object).
+			distance (float).			
+			closestDistance(int).
+			
+			closestDistance = 10000.
+
+			foreach item in neighbors: {
+					distance = |(self get-location) - (item get-location)|.
+
+					if distance < closestDistance: {
+							closestFood = item.
+							closestDistance = distance.
+					}
+			}
+			return closestFood.				
+	
+}
+	
