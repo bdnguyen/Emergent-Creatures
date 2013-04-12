@@ -7,14 +7,14 @@
 @define INTERVAL_SCHEDUL_GENERE 15. 
 
 # Positions des abris
-@define ABRI1_POS (0, 0, 0).
+@define ABRI1_POS (0, 0, 0). #ne pas modifie pour l'instant
 @define ABRI2_POS (90, 0, 90).
 @define ABRI3_POS (-90, 0, -90).
 
 # Nombre des creatures
-@define NUM_PREDS 6.
-@define NUM_PROIES 120.
-@define NUM_FOODS 250.
+@define NUM_PREDS 8.
+@define NUM_PROIES 100.
+@define NUM_FOODS 300.
 
 # Energie des creatures
 @define PROIE_ENERGIE 10.
@@ -24,9 +24,9 @@
 # Portee des creatures + divers
 @define CREATURE_RANGE (100, 0, 100).
 @define FOOD_RANGE (100, 0, 100).
-@define NBH_SIZE_PROIE 15.0.
-@define NBH_SIZE_PRED 20.0.
+@define NBH_SIZE_PROIE 20.0.
+@define NBH_SIZE_PRED 30.0.
 @define PRED_START_POS(-80, 0, 80).
-
+@define CONST_BALADER 30. 
 
 

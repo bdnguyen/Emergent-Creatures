@@ -17,18 +17,18 @@ Control : Creatures {
 		foods (list).
 		proies (list).
 		preds (list).
-		#item (object).
+		item (object).
 		#items (list).
 		cloudTexture (object).
-		#selection (object).
+		selection (object).
 		
 		
 	# Pour visualiser les neighbs d'objet selectionne
-	#+ to click on item (object):
-	#	if selection: selection hide-neighbor-lines.
-	#	if item: item show-neighbor-lines.
-	#	selection = item.
-	#	super click on item.
+	+ to click on item (object):
+		if selection: selection hide-neighbor-lines.
+		if item: item show-neighbor-lines.
+		selection = item.
+		super click on item.
 
 	+ to init:
 			
@@ -64,9 +64,9 @@ Control : Creatures {
 		abri3 move to ABRI3_POS.
 		
 		# Creer les agents.
-		proies = NUM_PROIES new Proie.
-		preds = NUM_PREDS new Predateur.
-		foods = NUM_FOODS new Food.	
+		NUM_PROIES new Proie.
+		NUM_PREDS new Predateur.
+		NUM_FOODS new Food.	
 		self schedule-generer with NUM_SCHEDUL_GENERE and INTERVAL_SCHEDUL_GENERE. 
 		
 		
@@ -104,7 +104,7 @@ Control : Creatures {
 			self end-simulation. 	
 			
 	+ to iterate:
-		#item (object).
+		item (object).
 		
 		self update-neighbors.
 		
@@ -164,12 +164,12 @@ Creature : Proie {
 			foreach item in neighbors:
 				if (item is a "Food"): {
 					#print "Proie: J'ai detecte un food: $item".
-					push item onto neighbors-food.
-					#self drift to ((self find-closest-food in neighbors-food) get-location).
-					line = new Line.
-					line connect from self to item with-color (100, 100, 100).
+					#push item onto neighbors-food.
+					#self drift to ((self find-closest-cible in neighbors) get-location).
+					#line = new Line.
+					#line connect from self to item with-color (100, 100, 100).
 					if (|(item get-location) - (self get-location)| > 3.5): {
-						free line.
+						#free line.
 					}				
 					self drift to (item get-location).					
 				} else
@@ -183,9 +183,10 @@ Creature : Proie {
 					}
 					self drift to (self choix-abris).
 				} else {
-					self se-balader.
+					
 
 				}
+				self se-balader.
 				#Essaie de ne pas trop eloigne du centre				
 				if |(self get-location)| > 150: self drift to -(self get-location).
 
@@ -218,9 +219,10 @@ Creature: Predateur {
 				
 				self set-color to (1, 0, 0).
 								
-				#self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE. #pour qu'il ne "spawn" pas dans l'abri
+				#self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE. 
+				#pour qu'il ne "spawn" pas dans l'abri
 				if (random[1]==0):{
-				self move to PRED_START_POS.
+				self move to PRED_START_POS. 
 				} else self move to -PRED_START_POS.
 				
 				self set-energie to PRED_ENERGIE.
@@ -252,8 +254,9 @@ Creature: Predateur {
 				neighbors = (self get-neighbors).
 				self actionDrift.	
 				self actionWander.
+				
 				#pred ne peut pas rester trop pret de l'abri des proies
-				if (|(self get-location) - ABRI1_POS| < 50): { 
+				if (|(self get-location) - ABRI1_POS| < 30): { 
 					self drift to ((self get-location)*1.4).
 				} else {				
 				
@@ -269,9 +272,10 @@ Creature: Predateur {
 					}		
 					self drift to (item get-location).
 					} else {
-					self se-balader.
+					
 				}
 				}
+				self se-balader.
 				#Essaie de ne pas trop eloigne du centre				
 				if |(self get-location)| > 150: self drift to -(self get-location).				
 				

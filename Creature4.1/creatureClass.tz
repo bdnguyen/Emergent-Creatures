@@ -28,7 +28,7 @@ Mobile: Creature {
 			return energie.		
 	
 	+ to se-balader:
-		if random[100] == 0: { 
+		if random[CONST_BALADER] == 0: { 
 			self wander to random[2*CREATURE_RANGE] - CREATURE_RANGE. 
 			#- CREATURE_RANGE.	
 		}		
@@ -75,23 +75,23 @@ Mobile: Creature {
 			}			
 			
 			
-	+ to find-closest-food in neighbors (list):
+	+ to find-closest-cible in neighbors (list):
 			item (object).
-			closestFood (object).
+			closestCible (object).
 			distance (float).			
 			closestDistance(int).
 			
-			closestDistance = 10000.
+			closestDistance = 100.
 
 			foreach item in neighbors: {
 					distance = |(self get-location) - (item get-location)|.
 
 					if distance < closestDistance: {
-							closestFood = item.
+							closestCible = item.
 							closestDistance = distance.
 					}
 			}
-			return closestFood.				
+			return closestCible.				
 	
 }
 	
