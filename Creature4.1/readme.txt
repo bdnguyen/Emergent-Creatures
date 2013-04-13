@@ -14,15 +14,15 @@ Proie:
 - Cherche des voisins dans sa portee (defini dans fichier constants.tz avec NBH_SIZE_PROIE)
 - Si il detecte la nourriture, il avance vers la nourriture. En collision avec la nourriture, il gagne de l'energie de la nourriture. 
 - Si il detecte un predateur, il retourne vers l'un des 3 abris, chaque abri a 33% pour etre choisi.
-- Si il ne detecte pas de voisin, il peut se-balader justqu'il detecte un autre voisin.
+- Si il ne detecte pas de voisin, il peut se-balader jusqu'il detecte un autre voisin.
 
 
 Predateur:
 - Cherche des voisins dans sa portee. (defini dans fichier constants.tz avec NBH_SIZE_PRED)
 - Si il se trouve dans une proximite de l'abri1 (se trouve a l'origine de l'univers), il recule.
 - Si il detecte un Proie, il avance vers le proie, il gagne d'energie equivalent au (energie du proie mange)/4 
-- Si il est en collision avec un Pred et que son energie est 2*(energie du pred) alors il le tue, et gagne d'energie equivalent a (energie du pred tue)/6
-- Si il ne detecte pas de voisin, il peut se balader justqu'il detecte un autre voisin (si voisin est nourriture, il ignore).
+- Si il est en collision avec un Pred et que son energie est 2*(energie du pred) alors il le tue, et perd d'energie equivalent a (energie du pred tue)/6
+- Si il ne detecte pas de voisin, il peut se balader jusqu'il detecte un autre voisin (si voisin est nourriture, il ignore).
 
 
 Nourriture et Abris:

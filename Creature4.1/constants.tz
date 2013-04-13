@@ -1,5 +1,5 @@
 # Environnement
-@define CAMERA_POS (90,100,90).
+@define CAMERA_POS (90,110,90).
 @define LIGHT_POS (0, 50, 0).
 @define FLOOR_SIZE (350, 5, 350).
 @define FLOOR_DEPTH (0, -3.5, 0).
@@ -12,21 +12,24 @@
 @define ABRI3_POS (-90, 0, -90).
 
 # Nombre des creatures
-@define NUM_PREDS 8.
-@define NUM_PROIES 100.
-@define NUM_FOODS 300.
+@define NUM_PREDS 5.
+@define NUM_PROIES 80.
+@define NUM_FOODS 200.
 
 # Energie des creatures
 @define PROIE_ENERGIE 10.
-@define PRED_ENERGIE 14.
+@define PRED_ENERGIE 12.
 @define FOOD_ENERGIE 1.
 
 # Portee des creatures + divers
 @define CREATURE_RANGE (100, 0, 100).
 @define FOOD_RANGE (100, 0, 100).
 @define NBH_SIZE_PROIE 20.0.
-@define NBH_SIZE_PRED 30.0.
+@define NBH_SIZE_PRED 40.0.
 @define PRED_START_POS(-80, 0, 80).
+# Frequence de se balader des agents, plus la valeur est grand, le moins frequent les agents se baladeraient.
 @define CONST_BALADER 30. 
+# Distance que les preds doivent se decaler de l'abri1
+@define SAFE_RANGE 35.
 
 

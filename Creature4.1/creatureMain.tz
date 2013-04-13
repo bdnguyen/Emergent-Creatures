@@ -39,17 +39,14 @@ Control : Creatures {
 		
 		self add-menu named "Generer foods" for-method "generer-foods".		
 		self add-menu named "Refresh neighbors" for-method "refresh-neighbors".
-		# set up the lighting
 		self enable-lighting.
 		self move-light to LIGHT_POS.
-
 
 		# Set up background.
 		cloudTexture = (new Image load from "images/clouds.png").
 		self set-background-texture-image to cloudTexture.
 
 		# Ajouter floor.
-
 		floor = new Floor.
 		floor set-size to FLOOR_SIZE.
         floor move to FLOOR_DEPTH. 
@@ -69,16 +66,12 @@ Control : Creatures {
 		NUM_FOODS new Food.	
 		self schedule-generer with NUM_SCHEDUL_GENERE and INTERVAL_SCHEDUL_GENERE. 
 		
-		
 		# Set some camera/display options.
 		self offset-camera by CAMERA_POS.
 		self enable-shadows.
-		#self enable-reflections.
-		#self disable-text.
-		#self enable-outline.
+		# Option pour dire au moteur breve de ne pas prends en compte des objets desalloue
 		self disable-freed-instance-protection.
-		 
-		 
+		
 		
 		# Generer (foods pour l'instant) avec nombre de fois et intervalle de temps
 		+ to schedule-generer with fois (int) and interval (int) :
@@ -93,11 +86,10 @@ Control : Creatures {
 			}
 			
 		+ to generer-foods:
-			foods = ((NUM_FOODS)/2) new Food.
+			((NUM_FOODS)/2) new Food.
 		
 		+ to refresh-neighbors:
 			self update-neighbors.
-			#self disable-freed-instance-protection.
 			
 		+ to end-and-archive:
 			self save-as-xml file "archiveCreature.xml".
@@ -148,7 +140,7 @@ Creature : Proie {
 			if random[2]==0: {
 			return ABRI3_POS.
 			} else {
-			if random[2]==1:{
+			if random[1]==0:{
 			return ABRI2_POS.
 			} else return ABRI1_POS.	
 			}
@@ -166,11 +158,11 @@ Creature : Proie {
 					#print "Proie: J'ai detecte un food: $item".
 					#push item onto neighbors-food.
 					#self drift to ((self find-closest-cible in neighbors) get-location).
-					#line = new Line.
-					#line connect from self to item with-color (100, 100, 100).
+					line = new Line.
+					line connect from self to item with-color (100, 100, 100).
 					if (|(item get-location) - (self get-location)| > 3.5): {
-						#free line.
-					}				
+						free line.
+					}
 					self drift to (item get-location).					
 				} else
 				if (item is a "Predateur"): {
@@ -182,13 +174,8 @@ Creature : Proie {
 						free line.
 					}
 					self drift to (self choix-abris).
-				} else {
-					
-
-				}
+				} 
 				self se-balader.
-				#Essaie de ne pas trop eloigne du centre				
-				if |(self get-location)| > 150: self drift to -(self get-location).
 
 	
 	+ to iterate:
@@ -234,7 +221,7 @@ Creature: Predateur {
 		
 		+ to battre with predateurs (object):
 				if (energie > (predateurs get-energie)*2):{
-				self set-energie to (energie += (predateurs get-energie)/6).
+				self set-energie to (energie -= (predateurs get-energie)/6).
 				free predateurs.
 				print "Predateur: J'ai tue un concurrent, vive la selection naturelle! Energie =",(self get-energie).
 				}
@@ -256,7 +243,7 @@ Creature: Predateur {
 				self actionWander.
 				
 				#pred ne peut pas rester trop pret de l'abri des proies
-				if (|(self get-location) - ABRI1_POS| < 30): { 
+				if (|(self get-location) - ABRI1_POS| < SAFE_RANGE): { 
 					self drift to ((self get-location)*1.4).
 				} else {				
 				
@@ -271,14 +258,9 @@ Creature: Predateur {
 						free line.
 					}		
 					self drift to (item get-location).
-					} else {
-					
-				}
+					} 
 				}
 				self se-balader.
-				#Essaie de ne pas trop eloigne du centre				
-				if |(self get-location)| > 150: self drift to -(self get-location).				
-				
 		
 		
         + to iterate:
