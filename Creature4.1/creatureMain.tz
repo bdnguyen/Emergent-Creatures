@@ -18,7 +18,6 @@ Control : Creatures {
 		proies (list).
 		preds (list).
 		item (object).
-		#items (list).
 		cloudTexture (object).
 		selection (object).
 		
@@ -123,7 +122,6 @@ Creature : Proie {
 		self set-shape to shape.
 		
 		self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE.
-		self set-velocity to (0, 0, 0).
 		self set-color to (0, 1, 0).
 		self set-energie to PROIE_ENERGIE.
 		self handle-collisions with-type "Food" with-method "manger".
@@ -247,10 +245,8 @@ Creature: Predateur {
 					self drift to ((self get-location)*1.4).
 				} else {				
 				
-				# instincts pred
 				foreach item in neighbors:
 					if (item is a "Proie"): {
-					#print "Predateur: J'ai detecte un proie: $item".
 					push item onto neighbors-proie.
 					line = new Line.
 					line connect from self to item with-color (1, 0, 0).
@@ -277,8 +273,7 @@ Creature: Predateur {
 				if (energie > 30):{
 				self set-shape to (new PolygonCone init-with sides 6 height 8 radius 9).
 				}
-
-				super iterate.		
+	
 }
 
 
