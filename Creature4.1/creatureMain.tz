@@ -20,7 +20,13 @@ Control : Creatures {
 		item (object).
 		cloudTexture (object).
 		selection (object).
-		
+		GenFoodsMenu (object).
+		GenProiesMenu (object).
+		GenPredsMenu (object).
+		AugBarrier (object).
+		DimBarrier (object).
+		ResetBarrier (object).
+		saferangevar (int).
 		
 	# Pour visualiser les neighbs d'objet selectionne
 	+ to click on item (object):
@@ -35,9 +41,16 @@ Control : Creatures {
 		abri1 (object).
 		abri2 (object).
 		abri3 (object).
+		saferangevar = SAFE_RANGE.
 		
-		self add-menu named "Generer foods" for-method "generer-foods".		
-		self add-menu named "Refresh neighbors" for-method "refresh-neighbors".
+		GenFoodsMenu = (self add-menu named "Generer foods" for-method "generer-foods").	
+		GenProiesMenu = (self add-menu named "Generer-proies" for-method "generer-proies").
+		GenPredsMenu = (self add-menu named "Generer-preds" for-method "generer-preds").
+		self add-menu-separator.
+		DimBarrier = (self add-menu named "Diminuer puissance barriere" for-method "diminuer-barriere").
+		AugBarrier = (self add-menu named "Augmenter puissance barriere" for-method "augmenter-barriere").
+		ResetBarrier = (self add-menu named "Reset puissance barriere" for-method "reset-barriere").
+		
 		self enable-lighting.
 		self move-light to LIGHT_POS.
 
@@ -83,17 +96,45 @@ Control : Creatures {
 					t+=interval.
 				#}
 			}
-			
+		
+		+ to get-saferangevar:
+			return saferangevar.
+		# Options Menus:
 		+ to generer-foods:
 			((NUM_FOODS)/2) new Food.
+			GenFoodsMenu uncheck.
+			
+		+ to generer-proies:
+			2 new Proie.
+			GenProiesMenu uncheck.
+			
+		+ to generer-preds:
+			2 new Predateur.	
+			GenPredsMenu uncheck.
+			
+		+ to diminuer-barriere:
+			if (saferangevar != 0):{
+			saferangevar-=10.
+			DimBarrier check.
+			AugBarrier uncheck.	
+			ResetBarrier uncheck.			
+			}	
 		
-		+ to refresh-neighbors:
-			self update-neighbors.
+		+ to augmenter-barriere:
+			if (saferangevar != 0):{
+			saferangevar+=10.
+			AugBarrier check.
+			DimBarrier uncheck.
+			ResetBarrier uncheck.			
+			}
 			
-		+ to end-and-archive:
-			self save-as-xml file "archiveCreature.xml".
-			self end-simulation. 	
-			
+		+ to reset-barriere:
+			saferangevar=SAFE_RANGE.
+			ResetBarrier check.
+			AugBarrier uncheck.
+			DimBarrier uncheck.			
+				
+
 	+ to iterate:
 		item (object).
 		
@@ -113,12 +154,12 @@ Control : Creatures {
 Creature : Proie {
 	+ variables:
 		shape (object).
-		neighbors-food (list).
+		#neighbors-food (list).
 		neighbors-pred (list).
 
 		
 	+ to init:
-		shape =(new PolygonCone init-with sides 6 height 3 radius 3).
+		shape =(new PolygonCone init-with sides 4 height 3 radius 2.5).
 		self set-shape to shape.
 		
 		self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE.
@@ -132,7 +173,7 @@ Creature : Proie {
 			self set-energie to (energie += (food get-energie)).
 			self set-color to (0,0,1).
 			free food.
-			print "Proie: J'ai mange un truc, ouais! Energie =", (self get-energie).
+			#print "Proie: J'ai mange un truc, ouais! Energie =", (self get-energie).
 	
 	+ to choix-abris:
 			if random[2]==0: {
@@ -153,40 +194,40 @@ Creature : Proie {
 			
 			foreach item in neighbors:
 				if (item is a "Food"): {
-					#print "Proie: J'ai detecte un food: $item".
 					#push item onto neighbors-food.
 					#self drift to ((self find-closest-cible in neighbors) get-location).
-					line = new Line.
-					line connect from self to item with-color (100, 100, 100).
-					if (|(item get-location) - (self get-location)| > 3.5): {
-						free line.
-					}
+					#line = new Line.
+					#line connect from self to item with-color (100, 100, 100).
+					#if (|(item get-location) - (self get-location)| > 3.5): {
+					#	free line.
+					#}
 					self drift to (item get-location).					
 				} else
 				if (item is a "Predateur"): {
 					#print "Proie: J'ai detecte un predateur: $item".
 					push item onto neighbors-pred.
 					line = new Line.
-					line connect from self to item with-color (0, 0, 1).
-					if (|(item get-location) - (self get-location)| > 7): {
-						free line.
-					}
+					#line connect from self to item with-color (0, 0, 1).
+					#if (|(item get-location) - (self get-location)| > 7): {
+					#	free line.
+					#}
 					self drift to (self choix-abris).
 				} 
-				self se-balader.
+				
 
 	
 	+ to iterate:
 		self instinct-proie.
+		self se-balader.
 		#Pour tester visuellement:
 		if (energie > 19):{
-			self set-shape to (new PolygonCone init-with sides 3 height 4 radius 5).
+			self set-shape to (new PolygonCone init-with sides 3 height 4 radius 3).
 		}
 		if (energie > 25):{
-			self set-shape to (new PolygonCone init-with sides 3 height 6 radius 7).
+			self set-shape to (new PolygonCone init-with sides 3 height 5 radius 4).
 		}
 		if (energie > 30):{
-			self set-shape to (new PolygonCone init-with sides 3 height 8 radius 9).
+			self set-shape to (new PolygonCone init-with sides 3 height 6 radius 5).
 		}		
 
 }
@@ -197,11 +238,11 @@ Creature: Predateur {
 				neighbors-proie (list).
 
         + to init:
-				
+
 				shape =(new PolygonCone init-with sides 6 height 3 radius 3).
 				
                 self set-shape to shape.
-				
+	
 				self set-color to (1, 0, 0).
 								
 				#self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE. 
@@ -221,14 +262,14 @@ Creature: Predateur {
 				if (energie > (predateurs get-energie)*2):{
 				self set-energie to (energie -= (predateurs get-energie)/6).
 				free predateurs.
-				print "Predateur: J'ai tue un concurrent, vive la selection naturelle! Energie =",(self get-energie).
+				#print "Predateur: J'ai tue un concurrent, vive la selection naturelle! Energie =",(self get-energie).
 				}
 				
 		+ to tuer with proies (object):
 				if (energie > (proies get-energie)):{
 				self set-energie to (energie += (proies get-energie)/4).
 				free proies.
-				print "Predateur: J'ai tue mon proie, omnomnom. Energie =", (self get-energie).
+				#print "Predateur: J'ai tue mon proie, omnomnom. Energie =", (self get-energie).
 				}
 				
 		+ to instinct-pred:
@@ -241,7 +282,7 @@ Creature: Predateur {
 				self actionWander.
 				
 				#pred ne peut pas rester trop pret de l'abri des proies
-				if (|(self get-location) - ABRI1_POS| < SAFE_RANGE): { 
+				if (|(self get-location) - ABRI1_POS| < (controller get-saferangevar)): { 
 					self drift to ((self get-location)*1.4).
 				} else {				
 				
@@ -256,22 +297,22 @@ Creature: Predateur {
 					self drift to (item get-location).
 					} 
 				}
-				self se-balader.
+				
 		
 		
         + to iterate:
 
 				self instinct-pred.
-				
+				self se-balader.
 				#Pour tester visuellement
 				if (energie > 19):{
-				self set-shape to (new PolygonCone init-with sides 6 height 4 radius 5).
+				self set-shape to (new PolygonCone init-with sides 6 height 4 radius 3).
 				}
 				if (energie > 25):{
-				self set-shape to (new PolygonCone init-with sides 6 height 6 radius 7).
+				self set-shape to (new PolygonCone init-with sides 6 height 5 radius 4).
 				}
 				if (energie > 30):{
-				self set-shape to (new PolygonCone init-with sides 6 height 8 radius 9).
+				self set-shape to (new PolygonCone init-with sides 6 height 6 radius 5).
 				}
 	
 }

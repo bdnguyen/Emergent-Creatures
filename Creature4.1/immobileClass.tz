@@ -1,6 +1,6 @@
 @path "classes"
 @path "lib/classes"
-@path "demos/ProjetEmergence/Creature4.1"
+
 
 @use Stationary.
 @use Control.

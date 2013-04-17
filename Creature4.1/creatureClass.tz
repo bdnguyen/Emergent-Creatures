@@ -1,6 +1,6 @@
 @path "classes"
 @path "lib/classes"
-@path "demos/ProjetEmergence/Creature4.1"
+
 
 @use Mobile.
 @use Control.
@@ -17,6 +17,11 @@ Mobile: Creature {
 	
 	+ to init:	
 			mort=0.
+			drifting=0.
+		    driftLocation=(0,0,0).
+			wandering=0.
+			wanderLocation=(0,0,0).
+			energie=0.
 		
 	+ to set-mort:
 			mort=1.
@@ -91,6 +96,24 @@ Mobile: Creature {
 					}
 			}
 			return closestCible.				
-	
+
+	+ to check-visi of item (object):
+		# An item is visible if it is within a certain angle (2.0 radians) 
+		# of the direction we're facing (assumed to be a vector in the 
+		# direction we're moving).
+
+		if (item == self): return 0.
+		if !(item is a "Creature"): return 0.
+		if (self get-angle to item) > 2.0: return 0.
+
+		return 1. 
+
+	+ to get-angle to obj (object):
+		tempVector (vector).
+
+		if | ( self get-velocity ) | == 0: return 0.
+		
+		tempVector = (obj get-location) - (self get-location).
+		return angle((self get-velocity), tempVector).			
 }
 	
