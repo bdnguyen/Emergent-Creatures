@@ -1,6 +1,5 @@
 @path "classes"
 @path "lib/classes"
-@path "demos/ProjetEmergence/Creature4.1"
 
 @use Mobile.
 @use Control.
@@ -14,10 +13,10 @@ Controller Creatures.
 
 Control : Creatures {
 	+ variables:
-		foods (list).
-		proies (list).
-		preds (list).
-		item (object).
+		#foods (list).
+		#proies (list).
+		#preds (list).
+		#item (object).
 		cloudTexture (object).
 		selection (object).
 		GenFoodsMenu (object).
@@ -105,7 +104,7 @@ Control : Creatures {
 			GenFoodsMenu uncheck.
 			
 		+ to generer-proies:
-			2 new Proie.
+			4 new Proie.
 			GenProiesMenu uncheck.
 			
 		+ to generer-preds:
@@ -155,7 +154,7 @@ Creature : Proie {
 	+ variables:
 		shape (object).
 		#neighbors-food (list).
-		neighbors-pred (list).
+		#neighbors-pred (list).
 
 		
 	+ to init:
@@ -205,7 +204,7 @@ Creature : Proie {
 				} else
 				if (item is a "Predateur"): {
 					#print "Proie: J'ai detecte un predateur: $item".
-					push item onto neighbors-pred.
+					#push item onto neighbors-pred.
 					line = new Line.
 					#line connect from self to item with-color (0, 0, 1).
 					#if (|(item get-location) - (self get-location)| > 7): {
@@ -219,6 +218,7 @@ Creature : Proie {
 	+ to iterate:
 		self instinct-proie.
 		self se-balader.
+		self reduire-energie par CDVPROIE.
 		#Pour tester visuellement:
 		if (energie > 19):{
 			self set-shape to (new PolygonCone init-with sides 3 height 4 radius 3).
@@ -235,13 +235,13 @@ Creature : Proie {
 Creature: Predateur {
         + variables:
                 shape (object).
-				neighbors-proie (list).
+		#neighbors-proie (list).
 
         + to init:
 
 				shape =(new PolygonCone init-with sides 6 height 3 radius 3).
 				
-                self set-shape to shape.
+                		self set-shape to shape.
 	
 				self set-color to (1, 0, 0).
 								
@@ -256,7 +256,6 @@ Creature: Predateur {
 				self handle-collisions with-type "Proie" with-method "tuer".
 				self handle-collisions with-type "Predateur" with-method "battre".
 				self set-neighborhood-size to NBH_SIZE_PRED.
-				
 		
 		+ to battre with predateurs (object):
 				if (energie > (predateurs get-energie)*2):{
@@ -288,7 +287,7 @@ Creature: Predateur {
 				
 				foreach item in neighbors:
 					if (item is a "Proie"): {
-					push item onto neighbors-proie.
+					#push item onto neighbors-proie.
 					line = new Line.
 					line connect from self to item with-color (1, 0, 0).
 					if (|(item get-location) - (self get-location)| > 6): {
@@ -304,6 +303,8 @@ Creature: Predateur {
 
 				self instinct-pred.
 				self se-balader.
+				self reduire-energie par CDVPRED.
+
 				#Pour tester visuellement
 				if (energie > 19):{
 				self set-shape to (new PolygonCone init-with sides 6 height 4 radius 3).
