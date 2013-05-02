@@ -1,0 +1,295 @@
+@path "classes"
+@path "lib/classes"
+
+@use Mobile.
+@use Control.
+@use Shape.
+@use creatureClass.
+@use immobileClass.
+@use constants.
+
+
+Controller Creatures.
+
+Control : Creatures {
+	+ variables:
+		cloudTexture (object).
+		selection (object).
+		GenFoodsMenu (object).
+		GenProiesMenu (object).
+		GenPredsMenu (object).
+		AugBarrier (object).
+		DimBarrier (object).
+		ResetBarrier (object).
+		saferangevar (int).
+		
+	# Pour visualiser les neighbs d'objet selectionne
+	#+ to click on item (object):
+	#	if selection: selection hide-neighbor-lines.
+	#	if item: item show-neighbor-lines.
+	#	selection = item.
+	#	super click on item.
+
+	+ to init:
+			
+		floor (object).
+		abri1 (object).
+		abri2 (object).
+		abri3 (object).
+		saferangevar = SAFE_RANGE.
+		
+		GenFoodsMenu = (self add-menu named "Generer foods" for-method "generer-foods").	
+		GenProiesMenu = (self add-menu named "Generer-proies" for-method "generer-proies").
+		GenPredsMenu = (self add-menu named "Generer-preds" for-method "generer-preds").
+		self add-menu-separator.
+		DimBarrier = (self add-menu named "Diminuer puissance barriere" for-method "diminuer-barriere").
+		AugBarrier = (self add-menu named "Augmenter puissance barriere" for-method "augmenter-barriere").
+		ResetBarrier = (self add-menu named "Reset puissance barriere" for-method "reset-barriere").
+		
+		self enable-lighting.
+		self move-light to LIGHT_POS.
+
+		# Set up background.
+		cloudTexture = (new Image load from "images/clouds.png").
+		self set-background-texture-image to cloudTexture.
+
+		# Ajouter floor.
+		floor = new Floor.
+		floor set-size to FLOOR_SIZE.
+        floor move to FLOOR_DEPTH. 
+		floor catch-shadows.
+		
+		# Creer Abris.
+		abri1 = new Abri.
+		abri2 = new Abri.
+		abri3 = new Abri.
+		abri1 move to ABRI1_POS.
+		abri2 move to ABRI2_POS.
+		abri3 move to ABRI3_POS.
+		
+		# Creer les agents.
+		NUM_PROIES new Proie.
+		NUM_PREDS new Predateur.
+		NUM_FOODS new Food.	
+		self schedule-generer with NUM_SCHEDUL_GENERE and INTERVAL_SCHEDUL_GENERE. 
+		
+		# Set some camera/display options.
+		self offset-camera by CAMERA_POS.
+		self enable-shadows.
+		# Option pour dire au moteur breve de ne pas prends en compte des objets desalloue
+		self disable-freed-instance-protection.
+		
+		
+		# Generer (foods pour l'instant) avec nombre de fois et intervalle de temps
+		+ to schedule-generer with fois (int) and interval (int) :
+			i (int).
+			t (int).
+			t = interval.
+			for i=0, i<fois, i++:{ 
+				#if ((controller get-time)<110):{
+					self schedule method-call "generer-foods" at-time t.
+					t+=interval.
+				#}
+			}
+		
+		+ to get-saferangevar:
+			return saferangevar.
+			
+		# Options Menus:
+		+ to generer-foods:
+			((NUM_FOODS)/2) new Food.
+			GenFoodsMenu uncheck.
+			
+		+ to generer-proies:
+			4 new Proie.
+			GenProiesMenu uncheck.
+			
+		+ to generer-preds:
+			2 new Predateur.	
+			GenPredsMenu uncheck.
+			
+		+ to diminuer-barriere:
+			if (saferangevar != 0):{
+			saferangevar-=20.
+			DimBarrier check.
+			AugBarrier uncheck.	
+			ResetBarrier uncheck.			
+			}	
+		
+		+ to augmenter-barriere:
+			if (saferangevar != 0):{
+			saferangevar+=20.
+			AugBarrier check.
+			DimBarrier uncheck.
+			ResetBarrier uncheck.			
+			}
+			
+		+ to reset-barriere:
+			saferangevar=SAFE_RANGE.
+			ResetBarrier check.
+			AugBarrier uncheck.
+			DimBarrier uncheck.			
+				
+
+	+ to iterate:
+
+		self update-neighbors.
+		
+		super iterate.
+
+}
+
+
+Creature : Proie {
+	+ variables:
+		shape (object).
+		
+	+ to init:
+		shape =(new PolygonCone init-with sides 4 height 3 radius 2.5).
+		self set-shape to shape.
+		
+		self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE.
+		self set-color to (0, 0, 1).
+		self set-energie to PROIE_ENERGIE.
+		self handle-collisions with-type "Food" with-method "manger".
+		self set-neighborhood-size to NBH_SIZE_PROIE.
+			
+	
+	+ to manger with food (object):				
+			self set-energie to (energie += (food get-energie)).
+			free food.
+			#print "Proie: J'ai mange un truc, ouais! Energie =", (self get-energie).
+	
+	+ to choix-abris:
+			if random[2]==0: {
+			return ABRI3_POS.
+			} else {
+			if random[1]==0:{
+			return ABRI2_POS.
+			} else return ABRI1_POS.	
+			}
+	+ to instinct-proie:
+			neighbors (list).
+			item (object).
+			plusProche (object).
+			
+			neighbors = (self get-neighbors).
+			self actionWander.
+			self actionDrift.
+			
+			foreach item in neighbors:
+				if (item is a "Food"): {
+					self remove-all-lines.
+					plusProche=(self cherche-food-plus-proche in neighbors).
+					self add-line to plusProche with-color (0, 0, 1).
+					self drift to (plusProche get-location).				
+				} else
+				if (item is a "Predateur"): {
+					self drift to (self choix-abris).						
+				} 
+				#else self remove-all-lines.	
+				
+
+	
+	+ to iterate:
+		self instinct-proie.
+		self se-balader.
+		self reduire-energie par CDVPROIE.
+		#Pour tester visuellement:
+		if (energie > 19):{
+			self set-shape to (new PolygonCone init-with sides 3 height 4 radius 3).
+		}
+		if (energie > 25):{
+			self set-shape to (new PolygonCone init-with sides 3 height 5 radius 4).
+		}
+		if (energie > 30):{
+			self set-shape to (new PolygonCone init-with sides 3 height 6 radius 5).
+		}
+		#if (energie < 5): {self set-color to (0.5,0.5,0.8).}	
+
+}
+
+Creature: Predateur {
+        + variables:
+                shape (object).
+
+        + to init:
+
+				shape =(new PolygonCone init-with sides 6 height 3 radius 3).
+				
+				self set-shape to shape.
+	
+				self set-color to (1, 0, 0).
+								
+				#self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE. 
+				#pour qu'il ne "spawn" pas dans l'abri
+				if (random[1]==0):{
+				self move to PRED_START_POS. 
+				} else self move to -PRED_START_POS.
+				
+				self set-energie to PRED_ENERGIE.
+
+				self handle-collisions with-type "Proie" with-method "tuer".
+				self handle-collisions with-type "Predateur" with-method "battre".
+				self set-neighborhood-size to NBH_SIZE_PRED.
+		
+		+ to battre with predateurs (object):
+				if (energie > (predateurs get-energie)*2):{
+				self set-energie to (energie -= (predateurs get-energie)/6).
+				free predateurs.
+				#print "Predateur: J'ai tue un concurrent, vive la selection naturelle! Energie =",(self get-energie).
+				}
+				
+		+ to tuer with proies (object):
+				if (energie > (proies get-energie)):{
+				self set-energie to (energie += (proies get-energie)/4).
+				free proies.
+				#print "Predateur: J'ai tue mon proie, omnomnom. Energie =", (self get-energie).
+				}
+				
+		+ to instinct-pred:
+				neighbors (list).
+				item (object).
+				plusProche (object).
+				
+				neighbors = (self get-neighbors).
+				self actionDrift.	
+				self actionWander.
+				
+				#pred ne peut pas rester trop pret de l'abri des proies
+				if (|(self get-location) - ABRI1_POS| < (controller get-saferangevar)): { 
+					self drift to ((self get-location)*1.4).
+				} else {				
+				
+				foreach item in neighbors:
+					if (item is a "Proie"): {
+					self remove-all-lines.
+					plusProche=(self cherche-proie-plus-proche in neighbors).
+					self add-line to plusProche with-color (1, 0, 0).
+					self drift to (plusProche get-location).
+					}
+				}
+				
+		
+		
+        + to iterate:
+
+				self instinct-pred.
+				self se-balader.
+				self reduire-energie par CDVPRED.
+
+				#Pour tester visuellement
+				if (energie > 19):{
+				self set-shape to (new PolygonCone init-with sides 6 height 4 radius 3).
+				}
+				if (energie > 25):{
+				self set-shape to (new PolygonCone init-with sides 6 height 5 radius 4).
+				}
+				if (energie > 30):{
+				self set-shape to (new PolygonCone init-with sides 6 height 6 radius 5).
+				}
+				#if (energie < 5): {self set-color to (0.8,0.5,0.5).}		
+	
+}
+
+

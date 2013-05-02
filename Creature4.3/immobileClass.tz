@@ -1,0 +1,43 @@
+@path "classes"
+@path "lib/classes"
+
+
+@use Stationary.
+@use Control.
+@use constants.
+
+
+Stationary : Food {
+		+ variables:
+				foodShape (object).
+				foodEnergie (float).
+				tempsDeVie (int).
+		+ to init: 
+				foodShape = (new Sphere init-with radius 1).
+				self set-shape to foodShape.
+				self set-energie to FOOD_ENERGIE.
+				self set-color to (255, 255, 255).				
+				self randomize-location.
+				tempsDeVie = TDVFOODS + random[TDVFOODS*2].
+		
+		+ to set-energie to FE (float):
+				foodEnergie = FE.
+				
+		+ to get-energie:
+				return foodEnergie.
+				
+		+ to randomize-location:
+				self move to random[2 * FOOD_RANGE] - FOOD_RANGE.	
+		+ to iterate:
+				tempsDeVie--.
+				if (tempsDeVie==30): self set-color to (0.5,0.5,0).	
+				if (tempsDeVie==0): free self.
+
+}
+
+Stationary : Abri {
+	+ to init:
+		self set-shape to (new Sphere init-with radius 20).		
+		self set-color to (0,0,250).
+		self set-transparency to .3.
+}

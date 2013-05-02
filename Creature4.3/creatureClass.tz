@@ -1,0 +1,127 @@
+@path "classes"
+@path "lib/classes"
+
+
+@use Mobile.
+@use Control.
+@use constants.
+
+Mobile: Creature {
+	+ variables:
+		drifting (int).
+		driftLocation (vector).
+		wandering (int).
+		wanderLocation (vector).
+		energie (float).		
+		mort(int).
+	
+	+ to init:	
+			mort=0.
+			drifting=0.
+		   	driftLocation=(0,0,0).
+			wandering=0.
+			wanderLocation=(0,0,0).
+			energie=0.
+	+ to set-mort:
+			mort=1.
+		
+	+ to set-energie to e (float):
+			energie = e.
+		
+	+ to get-energie:
+			return energie.		
+	
+	+ to se-balader:
+		if random[CONST_BALADER] == 0: { 
+			self wander to random[3*CREATURE_RANGE] - CREATURE_RANGE. 
+		}		
+
+	+ to reduire-energie par n (double):
+		energie -= n.
+		if (energie <= 0.0): free self.	
+	
+	
+	+ to drift to location (vector):
+		drifting = 1.
+		driftLocation = location.  
+	
+	+ to wander to location (vector):	
+		wandering = 1.
+		wanderLocation = location.	
+	
+	+ to actionDrift:
+			if drifting: {
+				self offset by .06 *(driftLocation - (self get-location)).
+				if (|driftLocation - (self get-location)| < .01): {
+					self move to driftLocation.
+					drifting = 0.   
+				}		
+			}
+
+	+ to actionWander:
+			if wandering: {
+				self offset by .005 *(wanderLocation - (self get-location)).
+				if (|wanderLocation - (self get-location)| < .01): {
+					self move to wanderLocation.
+					wandering = 0.   
+				}
+			}			
+			
+			
+	+ to cherche-food-plus-proche in neighbors (list):
+			item (object).
+			ppFood (object).
+			distance (float).			
+			ppDistance(int).
+			
+			ppDistance = 10000.
+
+			foreach item in neighbors: {
+					distance = |(self get-location) - (item get-location)|.
+
+					if (distance < ppDistance) && (item is a "Food"): {
+							ppFood = item.
+							ppDistance = distance.
+					}
+			}
+			return ppFood.			
+
+	+ to cherche-proie-plus-proche in neighbors (list):
+			item (object).
+			ppProie (object).
+			distance (float).			
+			ppDistance(int).
+			
+			ppDistance = 10000.
+
+			foreach item in neighbors: {
+					distance = |(self get-location) - (item get-location)|.
+
+					if (distance < ppDistance) && (item is a "Proie"): {
+							ppProie = item.
+							ppDistance = distance.
+					}
+			}
+			return ppProie.				
+
+	+ to check-visi of item (object):
+		# An item is visible if it is within a certain angle (2.0 radians) 
+		# of the direction we're facing (assumed to be a vector in the 
+		# direction we're moving).
+
+		if (item == self): return 0.
+		if !(item is a "Creature"): return 0.
+		if (self get-angle to item) > 2.0: return 0.
+
+		return 1. 
+
+	+ to get-angle to obj (object):
+		tempVector (vector).
+
+		if | ( self get-velocity ) | == 0: return 0.
+		
+		tempVector = (obj get-location) - (self get-location).
+		return angle((self get-velocity), tempVector).		
+	
+}
+	
