@@ -32,9 +32,11 @@ Mobile: Creature {
 			return energie.		
 	
 	+ to se-balader:
-		if random[CONST_BALADER] == 0: { 
-			self wander to random[3*CREATURE_RANGE] - CREATURE_RANGE. 
-		}		
+			if random[CONST_BALADER] == 0: {
+				self wander to random[2*CREATURE_RANGE] - CREATURE_RANGE.		
+			}	
+			 
+				
 
 	+ to reduire-energie par n (double):
 		energie -= n.

@@ -21,14 +21,14 @@ Control : Creatures {
 		AugBarrier (object).
 		DimBarrier (object).
 		ResetBarrier (object).
-		saferangevar (int).
+		PBvar (int).
 		
-	# Pour visualiser les neighbs d'objet selectionne
-	#+ to click on item (object):
-	#	if selection: selection hide-neighbor-lines.
-	#	if item: item show-neighbor-lines.
-	#	selection = item.
-	#	super click on item.
+	#Pour visualiser les neighbs d'objet selectionne
+	+ to click on item (object):
+		if selection: selection hide-neighbor-lines.
+		if item: item show-neighbor-lines.
+		selection = item.
+		super click on item.
 
 	+ to init:
 			
@@ -36,7 +36,7 @@ Control : Creatures {
 		abri1 (object).
 		abri2 (object).
 		abri3 (object).
-		saferangevar = SAFE_RANGE.
+		PBvar = PUISSANCE_BARRIERE.
 		
 		GenFoodsMenu = (self add-menu named "Generer foods" for-method "generer-foods").	
 		GenProiesMenu = (self add-menu named "Generer-proies" for-method "generer-proies").
@@ -92,8 +92,8 @@ Control : Creatures {
 				#}
 			}
 		
-		+ to get-saferangevar:
-			return saferangevar.
+		+ to get-PBvar:
+			return PBvar.
 			
 		# Options Menus:
 		+ to generer-foods:
@@ -109,23 +109,23 @@ Control : Creatures {
 			GenPredsMenu uncheck.
 			
 		+ to diminuer-barriere:
-			if (saferangevar != 0):{
-			saferangevar-=20.
+			if (PBvar != 0):{
+			PBvar-=15.
 			DimBarrier check.
 			AugBarrier uncheck.	
 			ResetBarrier uncheck.			
 			}	
 		
 		+ to augmenter-barriere:
-			if (saferangevar != 0):{
-			saferangevar+=20.
+			if (PBvar != 0):{
+			PBvar+=15.
 			AugBarrier check.
 			DimBarrier uncheck.
 			ResetBarrier uncheck.			
 			}
 			
 		+ to reset-barriere:
-			saferangevar=SAFE_RANGE.
+			PBvar=PUISSANCE_BARRIERE.
 			ResetBarrier check.
 			AugBarrier uncheck.
 			DimBarrier uncheck.			
@@ -168,6 +168,7 @@ Creature : Proie {
 			return ABRI2_POS.
 			} else return ABRI1_POS.	
 			}
+			
 	+ to instinct-proie:
 			neighbors (list).
 			item (object).
@@ -181,29 +182,32 @@ Creature : Proie {
 				if (item is a "Food"): {
 					self remove-all-lines.
 					plusProche=(self cherche-food-plus-proche in neighbors).
-					self add-line to plusProche with-color (0, 0, 1).
-					self drift to (plusProche get-location).				
-				} else
+					if plusProche:{
+						wandering = 0.
+						self add-line to plusProche with-color (0, 0, 1).
+						self drift to (plusProche get-location).				
+					}
+				} else	
 				if (item is a "Predateur"): {
 					self drift to (self choix-abris).						
-				} 
-				#else self remove-all-lines.	
+				}
 				
-
 	
 	+ to iterate:
-		self instinct-proie.
 		self se-balader.
+		self instinct-proie.
+		
 		self reduire-energie par CDVPROIE.
 		#Pour tester visuellement:
-		if (energie > 19):{
+		if (energie > 15):{
+			self set-color to (0, 0, 1).
 			self set-shape to (new PolygonCone init-with sides 3 height 4 radius 3).
 		}
-		if (energie > 25):{
+		if (energie > 20):{
 			self set-shape to (new PolygonCone init-with sides 3 height 5 radius 4).
 		}
-		if (energie > 30):{
-			self set-shape to (new PolygonCone init-with sides 3 height 6 radius 5).
+		if (energie > 25):{
+			self set-shape to (new PolygonCone init-with sides 3 height 6 radius 5).	
 		}
 		if (energie < 7): {self set-color to (0.5,0.5,0.8).}	
 
@@ -257,16 +261,18 @@ Creature: Predateur {
 				self actionWander.
 				
 				#pred ne peut pas rester trop pret de l'abri des proies
-				if (|(self get-location) - ABRI1_POS| < (controller get-saferangevar)): { 
+				if (|(self get-location) - ABRI1_POS| < (controller get-PBvar)): { 
 					self drift to ((self get-location)*1.4).
-				} else {				
-				
+				} else {								
 				foreach item in neighbors:
 					if (item is a "Proie"): {
-					self remove-all-lines.
-					plusProche=(self cherche-proie-plus-proche in neighbors).
-					self add-line to plusProche with-color (1, 0, 0).
-					self drift to (plusProche get-location).
+						self remove-all-lines.
+						plusProche=(self cherche-proie-plus-proche in neighbors).
+						if plusProche:{
+							wandering = 0.
+							self add-line to plusProche with-color (1, 0, 0).
+							self drift to (plusProche get-location).
+						}
 					}
 				}
 				
@@ -279,13 +285,14 @@ Creature: Predateur {
 				self reduire-energie par CDVPRED.
 
 				#Pour tester visuellement
-				if (energie > 19):{
+				if (energie > 15):{
+				self set-color to (1, 0, 0).
 				self set-shape to (new PolygonCone init-with sides 6 height 4 radius 3).
 				}
-				if (energie > 25):{
+				if (energie > 20):{
 				self set-shape to (new PolygonCone init-with sides 6 height 5 radius 4).
 				}
-				if (energie > 30):{
+				if (energie > 25):{
 				self set-shape to (new PolygonCone init-with sides 6 height 6 radius 5).
 				}
 				if (energie < 7): {self set-color to (0.8,0.5,0.5).}		
