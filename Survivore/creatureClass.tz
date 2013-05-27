@@ -8,20 +8,21 @@
 
 Mobile: Creature {
 	+ variables:
-		drifting (int).
-		driftLocation (vector).
-		wandering (int).
-		wanderLocation (vector).
-		energie (float).		
-		mort(int).
+			etatAccelere (int).
+			accelereLoc (vector).
+			etatErrant (int).
+			errantLoc (vector).
+			energie (float).		
+			mort(int).
 	
 	+ to init:	
 			mort=0.
-			drifting=0.
-		   	driftLocation=(0,0,0).
-			wandering=0.
-			wanderLocation=(0,0,0).
+			etatAccelere=0.
+		   	accelereLoc=(0,0,0).
+			etatErrant=0.
+			errantLoc=(0,0,0).
 			energie=0.
+			
 	+ to set-mort:
 			mort=1.
 		
@@ -33,39 +34,38 @@ Mobile: Creature {
 	
 	+ to se-balader:
 			if random[CONST_BALADER] == 0: {
-				self wander to random[2*CREATURE_RANGE] - CREATURE_RANGE.		
+				self egarer vers random[2*CREATURE_RANGE] - CREATURE_RANGE.		
 			}	
-			 
-				
+			 				
 
 	+ to reduire-energie par n (double):
 		energie -= n.
 		if (energie <= 0.0): free self.	
 	
 	
-	+ to drift to location (vector):
-		drifting = 1.
-		driftLocation = location.  
+	+ to accelere vers location (vector):
+		etatAccelere = 1.
+		accelereLoc = location.  
 	
-	+ to wander to location (vector):	
-		wandering = 1.
-		wanderLocation = location.	
+	+ to egarer vers location (vector):	
+		etatErrant = 1.
+		errantLoc = location.	
 	
-	+ to actionDrift:
-			if drifting: {
-				self offset by .06 *(driftLocation - (self get-location)).
-				if (|driftLocation - (self get-location)| < .01): {
-					self move to driftLocation.
-					drifting = 0.   
+	+ to actionAccelere:
+			if etatAccelere: {
+				self offset by .06 *(accelereLoc - (self get-location)).
+				if (|accelereLoc - (self get-location)| < .01): {
+					self move to accelereLoc.
+					etatAccelere = 0.   
 				}		
 			}
 
-	+ to actionWander:
-			if wandering: {
-				self offset by .005 *(wanderLocation - (self get-location)).
-				if (|wanderLocation - (self get-location)| < .01): {
-					self move to wanderLocation.
-					wandering = 0.   
+	+ to actionEgarer:
+			if etatErrant: {
+				self offset by .005 *(errantLoc - (self get-location)).
+				if (|errantLoc - (self get-location)| < .01): {
+					self move to errantLoc.
+					etatErrant = 0.   
 				}
 			}			
 			
@@ -107,23 +107,12 @@ Mobile: Creature {
 			return ppProie.				
 
 	+ to check-visi of item (object):
-		# An item is visible if it is within a certain angle (2.0 radians) 
-		# of the direction we're facing (assumed to be a vector in the 
-		# direction we're moving).
-
+	
 		if (item == self): return 0.
 		if !(item is a "Creature"): return 0.
 		if (self get-angle to item) > 2.0: return 0.
 
 		return 1. 
 
-	+ to get-angle to obj (object):
-		tempVector (vector).
-
-		if | ( self get-velocity ) | == 0: return 0.
-		
-		tempVector = (obj get-location) - (self get-location).
-		return angle((self get-velocity), tempVector).		
-	
 }
 	

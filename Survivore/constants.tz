@@ -1,0 +1,51 @@
+# Environnement
+@define CAMERA_POS (80,90,80).
+@define LIGHT_POS (0, 50, 50).
+@define FLOOR_SIZE (350, 5, 350).
+@define FLOOR_DEPTH (0, -3.5, 0).
+# Combien de fois la nourriture s'auto-genere
+@define NUM_SCHEDUL_GENERE 100. 
+# L'intervale du temps entre chaque session d'auto-generation de la nouriture
+@define INTERVAL_SCHEDUL_GENERE 20. 
+
+# Positions des abris
+@define ABRI1_POS (0, 0, 0). 
+@define ABRI2_POS (80, 0, 80).
+@define ABRI3_POS (-80, 0, -80).
+
+# Nombre des creatures
+@define NUM_PREDS 8.
+@define NUM_PROIES 100.
+@define NUM_FOODS 200.
+
+# Energie des creatures
+@define PROIE_ENERGIE 12.
+@define PRED_ENERGIE 18.
+@define FOOD_ENERGIE 1.
+
+# Temps de vie nourriture
+@define TDVFOODS 100.
+
+# Cout de vie
+@define CDVPROIE 0.01. 
+@define CDVPRED 0.02.
+
+# Portee des creatures 
+@define CREATURE_RANGE (120, 0, 120).
+@define FOOD_RANGE (100, 0, 100).
+# Portee de vision (jusqu'a
+@define NBH_SIZE_PROIE 20.0.
+@define NBH_SIZE_PRED 40.0.
+@define PRED_START_POS(-80, 0, 80).
+# Frequence de se balader des agents, plus la valeur est grand, le moins frequent les agents se baladeraient.
+@define CONST_BALADER 250. 
+# Frequence de reproduction, plus la valeur est grande, le moins chance un Creature peut se reproduire.
+@define FREQ_REPRODUCTION_PROIE 1000.
+@define FREQ_REPRODUCTION_PRED 1500.
+# Energie a partir de laquelle, une creature peut se reproduire
+@define ENERGIE_MIN_REPRODUCTION_PROIE 25.
+@define ENERGIE_MIN_REPRODUCTION_PRED 35.
+# Distance que les preds doivent se decaler de l'abri1
+@define PUISSANCE_BARRIERE 40.
+
+

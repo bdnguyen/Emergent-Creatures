@@ -38,7 +38,7 @@ Control : Creatures {
 		abri3 (object).
 		PBvar = PUISSANCE_BARRIERE.
 		
-		GenFoodsMenu = (self add-menu named "Generer foods" for-method "generer-foods").	
+		GenFoodsMenu = (self add-menu named "Generer-nourritures" for-method "generer-foods").	
 		GenProiesMenu = (self add-menu named "Generer-proies" for-method "generer-proies").
 		GenPredsMenu = (self add-menu named "Generer-preds" for-method "generer-preds").
 		self add-menu-separator.
@@ -70,9 +70,9 @@ Control : Creatures {
 		# Creer les agents.
 		NUM_PROIES new Proie.
 		NUM_PREDS new Predateur.
-		NUM_FOODS new Food.	
+		NUM_FOODS new Food.		
 		self schedule-generer with NUM_SCHEDUL_GENERE and INTERVAL_SCHEDUL_GENERE. 
-		
+
 		# Set some camera/display options.
 		self offset-camera by CAMERA_POS.
 		self enable-shadows.
@@ -80,13 +80,13 @@ Control : Creatures {
 		self disable-freed-instance-protection.
 		
 		
-		# Generer (foods pour l'instant) avec nombre de fois et intervalle de temps
+		# Generer noourritures avec nombre de fois et intervalle de temps
 		+ to schedule-generer with fois (int) and interval (int) :
 			i (int).
 			t (int).
 			t = interval.
 			for i=0, i<fois, i++:{ 
-				#if ((controller get-time)<110):{
+				#if ((controller get-time)<500):{
 					self schedule method-call "generer-foods" at-time t.
 					t+=interval.
 				#}
@@ -152,8 +152,14 @@ Creature : Proie {
 		self set-color to (0, 0, 1).
 		self set-energie to PROIE_ENERGIE.
 		self handle-collisions with-type "Food" with-method "manger".
+		self handle-collisions with-type "Proie" with-method "reproduire".
 		self set-neighborhood-size to NBH_SIZE_PROIE.
-			
+	
+	+ to reproduire with proie (object):
+			if (random[FREQ_REPRODUCTION_PROIE]==1 && energie > ENERGIE_MIN_REPRODUCTION_PROIE): {
+				1 new Proie.
+				self reduire-energie par PROIE_ENERGIE.
+			}	
 	
 	+ to manger with food (object):				
 			self set-energie to (energie += (food get-energie)).
@@ -175,21 +181,21 @@ Creature : Proie {
 			plusProche (object).
 			
 			neighbors = (self get-neighbors).
-			self actionWander.
-			self actionDrift.
+			self actionEgarer.
+			self actionAccelere.
 			
 			foreach item in neighbors:
 				if (item is a "Food"): {
 					self remove-all-lines.
 					plusProche=(self cherche-food-plus-proche in neighbors).
 					if plusProche:{
-						wandering = 0.
+						etatErrant = 0.
 						self add-line to plusProche with-color (0, 0, 1).
-						self drift to (plusProche get-location).				
+						self accelere vers (plusProche get-location).				
 					}
 				} else	
 				if (item is a "Predateur"): {
-					self drift to (self choix-abris).						
+					self accelere vers (self choix-abris).						
 				}
 				
 	
@@ -199,14 +205,14 @@ Creature : Proie {
 		
 		self reduire-energie par CDVPROIE.
 		#Pour tester visuellement:
-		if (energie > 15):{
+		if (energie > 15 && energie < 17):{
 			self set-color to (0, 0, 1).
 			self set-shape to (new PolygonCone init-with sides 3 height 4 radius 3).
-		}
-		if (energie > 20):{
-			self set-shape to (new PolygonCone init-with sides 3 height 5 radius 4).
-		}
-		if (energie > 25):{
+		}		
+		#if (energie > 20 && energie < 21):{
+		#	self set-shape to (new PolygonCone init-with sides 3 height 5 radius 4).
+		#}
+		if (energie > 30 && energie < 31):{
 			self set-shape to (new PolygonCone init-with sides 3 height 6 radius 5).	
 		}
 		if (energie < 7): {self set-color to (0.5,0.5,0.8).}	
@@ -222,26 +228,26 @@ Creature: Predateur {
 				shape =(new PolygonCone init-with sides 6 height 3 radius 3).
 				
 				self set-shape to shape.
-	
 				self set-color to (1, 0, 0).
-								
-				#self move to random[2 * CREATURE_RANGE] - CREATURE_RANGE. 
-				#pour qu'il ne "spawn" pas dans l'abri
+				self set-energie to PRED_ENERGIE.
+									
+				#Position au depart du pred
 				if (random[1]==0):{
 				self move to PRED_START_POS. 
 				} else self move to -PRED_START_POS.
 				
-				self set-energie to PRED_ENERGIE.
-
 				self handle-collisions with-type "Proie" with-method "tuer".
-				self handle-collisions with-type "Predateur" with-method "battre".
+				self handle-collisions with-type "Predateur" with-method "battre-ou-reproduire".
 				self set-neighborhood-size to NBH_SIZE_PRED.
 		
-		+ to battre with predateurs (object):
-				if (energie > (predateurs get-energie)*2):{
-				self set-energie to (energie -= (predateurs get-energie)/6).
-				free predateurs.
+		+ to battre-ou-reproduire with predateurs (object):
+				if (energie > (predateurs get-energie)*3):{
+					self set-energie to (energie -= (predateurs get-energie)/6).
+					free predateurs.
 				#print "Predateur: J'ai tue un concurrent, vive la selection naturelle! Energie =",(self get-energie).
+				} else if (random[FREQ_REPRODUCTION_PRED]==1 && energie > ENERGIE_MIN_REPRODUCTION_PRED): {
+					1 new Predateur.
+					self reduire-energie par PRED_ENERGIE.
 				}
 				
 		+ to tuer with proies (object):
@@ -257,21 +263,21 @@ Creature: Predateur {
 				plusProche (object).
 				
 				neighbors = (self get-neighbors).
-				self actionDrift.	
-				self actionWander.
+				self actionAccelere.	
+				self actionEgarer.
 				
 				#pred ne peut pas rester trop pret de l'abri des proies
 				if (|(self get-location) - ABRI1_POS| < (controller get-PBvar)): { 
-					self drift to ((self get-location)*1.4).
+					self accelere vers ((self get-location)*1.4).
 				} else {								
 				foreach item in neighbors:
 					if (item is a "Proie"): {
 						self remove-all-lines.
 						plusProche=(self cherche-proie-plus-proche in neighbors).
 						if plusProche:{
-							wandering = 0.
+							etatErrant = 0.
 							self add-line to plusProche with-color (1, 0, 0).
-							self drift to (plusProche get-location).
+							self accelere vers (plusProche get-location).
 						}
 					}
 				}
@@ -285,14 +291,14 @@ Creature: Predateur {
 				self reduire-energie par CDVPRED.
 
 				#Pour tester visuellement
-				if (energie > 15):{
+				if (energie > 15 && energie < 16):{
 				self set-color to (1, 0, 0).
 				self set-shape to (new PolygonCone init-with sides 6 height 4 radius 3).
 				}
-				if (energie > 20):{
-				self set-shape to (new PolygonCone init-with sides 6 height 5 radius 4).
-				}
-				if (energie > 25):{
+				#if (energie > 20 && energie < 21):{
+				#self set-shape to (new PolygonCone init-with sides 6 height 5 radius 4).
+				#}
+				if (energie > 30 && energie <31):{
 				self set-shape to (new PolygonCone init-with sides 6 height 6 radius 5).
 				}
 				if (energie < 7): {self set-color to (0.8,0.5,0.5).}		
